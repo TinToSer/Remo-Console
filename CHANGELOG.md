@@ -5,6 +5,11 @@ All notable changes to Remo-Console will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-11-27
+
+### Fixed
+- **RDP Credential Popup Suppressed via `IMsRdpClientNonScriptable5`**: Implemented the `IMsRdpClientNonScriptable5` COM interface (`mstscax.dll`) to explicitly configure `EnableCredSspSupport`, `NegotiateSecurityLayer`, `PromptForCredentials`, `PromptForCredsOnClient`, `AllowPromptingForCredentials`, `AllowCredentialSaving`, `WarnAboutSendingCredentials`, `ShowRedirectionWarningDialog`, and `ClearTextPassword`, preventing redundant Windows Security credential prompts when a password is saved.
+
 ## [1.1.1] - 2026-11-27
 
 ### Fixed

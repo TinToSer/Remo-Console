@@ -511,6 +511,45 @@ namespace RemoConsole
         void put_ClearTextPassword([MarshalAs(UnmanagedType.BStr)] string pw);
     }
 
+    /// <summary>Verified vtable layout from mstscax.dll for controlling CredSSP and credential prompts.</summary>
+    [ComImport, Guid("4f6996d5-d7b1-412c-b0ff-063718566907"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IMsRdpClientNonScriptable5
+    {
+        // IMsTscNonScriptable (10)
+        void put_ClearTextPassword([MarshalAs(UnmanagedType.BStr)] string pw);
+        void _s1(); void _s2(); void _s3(); void _s4(); void _s5(); void _s6(); void _s7(); void _s8(); void _s9();
+        // IMsRdpClientNonScriptable (2)
+        void _s10(); void _s11();
+        // IMsRdpClientNonScriptable2 (2)
+        void _s12(); void _s13();
+        // IMsRdpClientNonScriptable3 (20)
+        void put_ShowRedirectionWarningDialog([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        [return: MarshalAs(UnmanagedType.VariantBool)] bool get_ShowRedirectionWarningDialog();
+        void put_PromptForCredentials([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        [return: MarshalAs(UnmanagedType.VariantBool)] bool get_PromptForCredentials();
+        void put_NegotiateSecurityLayer([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        [return: MarshalAs(UnmanagedType.VariantBool)] bool get_NegotiateSecurityLayer();
+        void put_EnableCredSspSupport([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        [return: MarshalAs(UnmanagedType.VariantBool)] bool get_EnableCredSspSupport();
+        void _s22(); void _s23(); void _s24(); void _s25(); void _s26(); void _s27();
+        void put_WarnAboutSendingCredentials([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        [return: MarshalAs(UnmanagedType.VariantBool)] bool get_WarnAboutSendingCredentials();
+        void _s30(); void _s31(); void _s32(); void _s33();
+        // IMsRdpClientNonScriptable4 (16)
+        void _s34(); void _s35(); void _s36(); void _s37(); void _s38(); void _s39(); void _s40(); void _s41();
+        void put_AllowCredentialSaving([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        [return: MarshalAs(UnmanagedType.VariantBool)] bool get_AllowCredentialSaving();
+        void put_PromptForCredsOnClient([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        [return: MarshalAs(UnmanagedType.VariantBool)] bool get_PromptForCredsOnClient();
+        void _s46(); void _s47(); void _s48(); void _s49();
+        // IMsRdpClientNonScriptable5 (12)
+        void _s50(); void _s51(); void _s52(); void _s53(); void _s54();
+        void put_DisableConnectionBar([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        void _s56(); void _s57(); void _s58(); void _s59();
+        void put_AllowPromptingForCredentials([MarshalAs(UnmanagedType.VariantBool)] bool v);
+        [return: MarshalAs(UnmanagedType.VariantBool)] bool get_AllowPromptingForCredentials();
+    }
+
     /// <summary>The subset of the RDP control's event dispinterface we listen to (DISPIDs from msrdp.idl).</summary>
     [ComImport, Guid("336d5562-efa8-482e-8cb3-c5c0fc7a7db6"), InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
     public interface IMsTscAxEvents
@@ -599,8 +638,24 @@ namespace RemoConsole
                 }
                 Try(() => o.SecuredSettings2.AudioRedirectionMode = hs.Audio ? 0 : 2);
                 Try(() => o.SecuredSettings2.KeyboardHookMode = 1);
-                if (!string.IsNullOrEmpty(password))
+                bool hasPwd = !string.IsNullOrEmpty(password);
+                var ns5 = ax.Ocx as IMsRdpClientNonScriptable5;
+                if (ns5 != null)
+                {
+                    Try(() => ns5.put_EnableCredSspSupport(hs.Nla));
+                    Try(() => ns5.put_NegotiateSecurityLayer(true));
+                    Try(() => ns5.put_ShowRedirectionWarningDialog(false));
+                    Try(() => ns5.put_WarnAboutSendingCredentials(false));
+                    Try(() => ns5.put_AllowCredentialSaving(false));
+                    Try(() => ns5.put_PromptForCredentials(!hasPwd));
+                    Try(() => ns5.put_PromptForCredsOnClient(!hasPwd));
+                    Try(() => ns5.put_AllowPromptingForCredentials(!hasPwd));
+                    if (hasPwd) Try(() => ns5.put_ClearTextPassword(password));
+                }
+                else if (hasPwd)
+                {
                     Try(() => ((IMsTscNonScriptable)ax.Ocx).put_ClearTextPassword(password));
+                }
 
                 lastConn = 0; sawActivity = false; startedUtc = DateTime.UtcNow;
                 timeoutSec = string.IsNullOrEmpty(password) ? 300 : 60;
