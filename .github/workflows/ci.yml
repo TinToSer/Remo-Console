@@ -13,7 +13,7 @@ jobs:
   build-and-test:
     runs-on: windows-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Build Remo-Console
@@ -23,17 +23,17 @@ jobs:
       - name: Verify version output
         shell: pwsh
         run: |
-          $ver = .\bin\Remo-Console.exe --version
-          Write-Host $ver
+          $ver = (& .\bin\Remo-Console.exe --version | Out-String).Trim()
+          Write-Host "Version: $ver"
           if ($LASTEXITCODE -ne 0 -or -not ($ver -match '^Remo-Console \d+\.\d+\.\d+')) {
-            throw "Unexpected --version output: $ver"
+            throw "Unexpected --version output: '$ver' (exit $LASTEXITCODE)"
           }
 
       - name: Run self-tests
         shell: pwsh
         run: |
           & .\bin\Remo-Console.exe --selftest | Out-Host
-          if ($LASTEXITCODE -ne 0) { throw "Self-test failed" }
+          if ($LASTEXITCODE -ne 0) { throw "Self-test failed (exit $LASTEXITCODE)" }
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

@@ -12,6 +12,15 @@ namespace RemoConsole
     static class Program
     {
         [DllImport("user32.dll")] static extern bool SetProcessDPIAware();
+        [DllImport("kernel32.dll")] static extern bool AttachConsole(int dwProcessId);
+
+        static void EnsureConsole()
+        {
+            if (!Console.IsOutputRedirected)
+            {
+                try { AttachConsole(-1); } catch { }
+            }
+        }
 
         public static string AppVersion
         {
@@ -40,20 +49,30 @@ namespace RemoConsole
         {
             if (Array.IndexOf(args, "--version") >= 0 || Array.IndexOf(args, "-v") >= 0)
             {
+                EnsureConsole();
                 Console.WriteLine("Remo-Console " + AppVersion);
+                Console.Out.Flush();
                 return 0;
             }
             if (Array.IndexOf(args, "--help") >= 0 || Array.IndexOf(args, "-h") >= 0)
             {
+                EnsureConsole();
                 Console.WriteLine("Remo-Console " + AppVersion + " - Remote-control console for Windows (RDP + VNC)");
                 Console.WriteLine("Usage: Remo-Console.exe [--data <dir>] [--selftest] [--version] [--help]");
+                Console.Out.Flush();
                 return 0;
             }
 
             string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Remo-Console");
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--data") dir = args[i + 1];
 
-            if (Array.IndexOf(args, "--selftest") >= 0) return SelfTest();
+            if (Array.IndexOf(args, "--selftest") >= 0)
+            {
+                EnsureConsole();
+                int rc = SelfTest();
+                Console.Out.Flush();
+                return rc;
+            }
 
             bool created;
             using (var mutex = new Mutex(true, MutexKey(dir), out created))
