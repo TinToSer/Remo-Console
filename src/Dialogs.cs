@@ -160,8 +160,17 @@ namespace RemoConsole
             nla.Checked = s.Nla; clip.Checked = s.RedirectClipboard; drives.Checked = s.RedirectDrives; printers.Checked = s.RedirectPrinters; audio.Checked = s.Audio;
             viewOnly.Checked = s.ViewOnly;
             bool has = !string.IsNullOrEmpty(s.Pwd);
-            pwdNote.Text = has ? "✓ A password is saved. Type a new one to replace it." : "Passwords are stored encrypted (Windows DPAPI), readable only by you on this PC.";
-            if (!has) pwdNote.ForeColor = Theme.Muted;
+            bool canDecrypt = has && !string.IsNullOrEmpty(s.Password);
+            if (has && !canDecrypt)
+            {
+                pwdNote.Text = "⚠ Saved password could not be decrypted on this PC/user. Enter a new password.";
+                pwdNote.ForeColor = Theme.Warn;
+            }
+            else
+            {
+                pwdNote.Text = has ? "✓ A password is saved. Type a new one to replace it." : "Passwords are stored encrypted (Windows DPAPI), readable only by you on this PC.";
+                if (!has) pwdNote.ForeColor = Theme.Muted;
+            }
             pwdNote.Width = has ? InnerW / 2 : InnerW;
             clearPwd.Visible = has;
             if (proto.Selected < 0) proto.Selected = 0;

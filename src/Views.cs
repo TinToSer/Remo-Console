@@ -560,8 +560,19 @@ namespace RemoConsole
                 Host hs = Host;
 
                 o.Server = (hs.Address ?? "").Trim();
-                Try(() => o.UserName = hs.Username);
-                Try(() => { if (!string.IsNullOrEmpty(hs.Domain)) o.Domain = hs.Domain; });
+                string rdpUser = (hs.Username ?? "").Trim();
+                string rdpDomain = (hs.Domain ?? "").Trim();
+                if (string.IsNullOrEmpty(rdpDomain))
+                {
+                    int slash = rdpUser.IndexOf('\\');
+                    if (slash > 0 && slash < rdpUser.Length - 1)
+                    {
+                        rdpDomain = rdpUser.Substring(0, slash);
+                        rdpUser = rdpUser.Substring(slash + 1);
+                    }
+                }
+                Try(() => { if (!string.IsNullOrEmpty(rdpUser)) o.UserName = rdpUser; });
+                Try(() => { if (!string.IsNullOrEmpty(rdpDomain)) o.Domain = rdpDomain; });
                 Try(() => o.DesktopWidth = Math.Max(200, Math.Min(8192, hs.Width)));
                 Try(() => o.DesktopHeight = Math.Max(200, Math.Min(8192, hs.Height)));
                 Try(() => o.ColorDepth = hs.ColorDepth);
@@ -572,7 +583,9 @@ namespace RemoConsole
                     Try(() => a.RDPPort = hs.Port);
                     Try(() => a.SmartSizing = true);
                     Try(() => a.EnableCredSspSupport = hs.Nla);
+                    Try(() => a.NegotiateSecurityLayer = true);
                     Try(() => a.AuthenticationLevel = 0);
+                    Try(() => a.PublicMode = false);
                     Try(() => a.RedirectClipboard = hs.RedirectClipboard);
                     Try(() => a.RedirectDrives = hs.RedirectDrives);
                     Try(() => a.RedirectPrinters = hs.RedirectPrinters);
@@ -581,7 +594,8 @@ namespace RemoConsole
                     Try(() => a.DisplayConnectionBar = false);
                     Try(() => a.PinConnectionBar = false);
                     Try(() => a.ConnectionBarShowMinimizeButton = false);
-                    Try(() => a.PromptForCredentials = string.IsNullOrEmpty(password));
+                    if (!string.IsNullOrEmpty(password))
+                        Try(() => a.ClearTextPassword = password);
                 }
                 Try(() => o.SecuredSettings2.AudioRedirectionMode = hs.Audio ? 0 : 2);
                 Try(() => o.SecuredSettings2.KeyboardHookMode = 1);

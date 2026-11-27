@@ -5,6 +5,15 @@ All notable changes to Remo-Console will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-11-27
+
+### Fixed
+- **RDP Auto-Login / Unexpected Windows Credential Popup**:
+  - Set `ClearTextPassword` directly on `AdvancedSettings9` (in addition to `IMsTscNonScriptable`) alongside `NegotiateSecurityLayer = true` and `PublicMode = false` for reliable CredSSP/NLA auto-login on Windows 10/11.
+  - Automatically split `DOMAIN\username` entered in the Username field into `Domain` and `UserName` for `mstscax`.
+  - Removed the invalid `AdvancedSettings.PromptForCredentials` COM call that silently threw on every RDP connect.
+  - Added a warning in the Edit Connection dialog if a saved DPAPI password cannot be decrypted on the current PC/user profile (e.g. after moving data across machines).
+
 ## [1.1.0] - 2026-11-27
 
 ### Added
