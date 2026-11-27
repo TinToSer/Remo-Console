@@ -1,0 +1,19 @@
+name: Feature Request
+description: Suggest a new feature or improvement for Remo-Console
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Problem or Motivation
+      description: What workflow or limitation would this feature improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe how you would like it to work.
+    validations:
+      required: true

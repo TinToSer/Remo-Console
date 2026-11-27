@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tintoser.github.io/Remo-Console/sitemap.xml

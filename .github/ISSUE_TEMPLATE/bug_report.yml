@@ -1,0 +1,39 @@
+name: Bug Report
+description: Report a crash, protocol issue, or unexpected behavior in Remo-Console
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Remo-Console Version
+      description: Run `Remo-Console.exe --version` or check the ☰ menu.
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: Protocol / Area
+      options:
+        - RDP
+        - VNC (RFB)
+        - Dashboard / UI
+        - Storage / Backups
+        - Build / Packaging
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and steps to reproduce it. Do NOT include real passwords, IPs, or sensitive hostnames.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Windows version and remote server type (e.g. Windows 11 24H2 connecting to TigerVNC on Ubuntu 24.04).
+    validations:
+      required: false

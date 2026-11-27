@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Remo-Console — Lightweight Portable Windows RDP &amp; VNC Remote Desktop Manager</title>
+  <meta name="description" content="Remo-Console is a fast, open-source, single-executable RDP and VNC remote desktop manager for Windows with live preview cards, DPAPI encryption, and zero dependencies.">
+  <meta name="keywords" content="Remo-Console, Windows RDP client, VNC client, remote desktop manager, mRemoteNG alternative, RDCMan alternative, portable RDP VNC, live preview cards, open source">
+  <link rel="canonical" href="https://tintoser.github.io/Remo-Console/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Remo-Console — Windows RDP &amp; VNC Manager with Live Preview Cards">
+  <meta property="og:description" content="Manage RDP and VNC servers in one dark-themed, responsive grid of live and static cards. Single portable ~150 KB Windows executable, zero dependencies.">
+  <meta property="og:url" content="https://tintoser.github.io/Remo-Console/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Remo-Console — Windows RDP &amp; VNC Remote Desktop Manager">
+  <meta name="twitter:description" content="Single-EXE portable RDP + VNC dashboard for Windows with live preview cards, DPAPI encryption, and crash-safe storage.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Remo-Console",
+    "operatingSystem": "Windows 10, Windows 11",
+    "applicationCategory": "UtilitiesApplication",
+    "softwareVersion": "1.0.0",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "url": "https://github.com/TinToSer/Remo-Console",
+    "downloadUrl": "https://github.com/TinToSer/Remo-Console/releases/latest",
+    "description": "Lightweight, portable Windows RDP and VNC remote-control console with live preview cards, crash-safe SHA-256 storage, and Windows DPAPI password encryption."
+  }
+  </script>
+  <style>
+    :root { --bg:#111319; --surface:#171a21; --card:#1b1f28; --border:#2a303d; --accent:#4d8aff; --ok:#34c77b; --text:#e9edf5; --muted:#8b94a6; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Segoe UI",system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    a { color:var(--accent); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .wrap { max-width:980px; margin:0 auto; padding:48px 24px; }
+    header { text-align:center; padding:36px 0 48px; }
+    .badge { display:inline-block; padding:4px 12px; border-radius:999px; background:rgba(77,138,255,.15); color:var(--accent); font-size:13px; font-weight:600; margin-bottom:14px; }
+    h1 { font-size:clamp(2rem,5vw,3.1rem); margin:0 0 14px; letter-spacing:-.02em; }
+    .sub { color:var(--muted); font-size:1.15rem; max-width:680px; margin:0 auto 28px; }
+    .cta { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+    .btn { display:inline-block; padding:12px 24px; border-radius:8px; font-weight:600; font-size:15px; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-primary:hover { background:#689eff; text-decoration:none; }
+    .btn-sec { background:var(--card); color:var(--text); border:1px solid var(--border); }
+    .btn-sec:hover { border-color:var(--accent); text-decoration:none; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; margin:32px 0 48px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:22px; }
+    .card h3 { margin:0 0 8px; font-size:1.05rem; }
+    .card p { margin:0; color:var(--muted); font-size:.95rem; }
+    pre { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; overflow-x:auto; color:#d7e1f7; }
+    footer { text-align:center; color:var(--muted); border-top:1px solid var(--border); padding-top:24px; font-size:.9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge">Open Source · MIT License · Windows x64</div>
+      <h1>Remo-Console</h1>
+      <p class="sub">A lightweight, single-executable <strong>RDP &amp; VNC Remote Desktop Manager</strong> for Windows with live preview cards, DPAPI encryption, and zero dependencies.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/TinToSer/Remo-Console/releases/latest">Download Latest Release</a>
+        <a class="btn btn-sec" href="https://github.com/TinToSer/Remo-Console">View on GitHub</a>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card"><h3>Live &amp; Static Cards</h3><p>Monitor dozens of servers at a glance in a responsive grid. Switch any host between live session preview and static thumbnail with TCP reachability probes.</p></div>
+      <div class="card"><h3>Native RDP + Custom VNC</h3><p>Uses Microsoft's native <code>mstscax</code> RDP engine alongside a custom RFB 3.3–3.8 VNC client supporting ZRLE, Hextile, RRE, CopyRect, Raw, and local hardware cursors.</p></div>
+      <div class="card"><h3>Single Portable EXE</h3><p>No installer, no Electron bloat, and no SDK required to compile — builds directly with Windows' built-in .NET Framework 4.x C# compiler.</p></div>
+      <div class="card"><h3>Crash-Safe &amp; Encrypted</h3><p>Passwords are encrypted at rest with Windows DPAPI. Every save is SHA-256 verified, flushed to disk, atomically swapped, and backed up automatically.</p></div>
+    </section>
+
+    <section>
+      <h2>Build from Source</h2>
+      <pre><code>git clone https://github.com/TinToSer/Remo-Console.git
+cd Remo-Console
+.\build.ps1
+.\bin\Remo-Console.exe --selftest</code></pre>
+    </section>
+
+    <footer>
+      Remo-Console is open source under the <a href="https://github.com/TinToSer/Remo-Console/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/TinToSer/Remo-Console/issues">Report an Issue</a>
+    </footer>
+  </div>
+</body>
+</html>

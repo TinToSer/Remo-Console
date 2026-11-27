@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Remo-Console
+        shell: pwsh
+        run: .\build.ps1
+
+      - name: Verify version output
+        shell: pwsh
+        run: |
+          $ver = .\bin\Remo-Console.exe --version
+          Write-Host $ver
+          if ($LASTEXITCODE -ne 0 -or -not ($ver -match '^Remo-Console \d+\.\d+\.\d+')) {
+            throw "Unexpected --version output: $ver"
+          }
+
+      - name: Run self-tests
+        shell: pwsh
+        run: |
+          & .\bin\Remo-Console.exe --selftest | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw "Self-test failed" }
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Remo-Console-win-x64
+          path: bin/Remo-Console.exe
+          if-no-files-found: error

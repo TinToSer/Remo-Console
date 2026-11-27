@@ -1,0 +1,26 @@
+# Build outputs
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.zip
+
+# Runtime & user data (never commit credentials, configs, or thumbnails)
+*.rc
+*.rc.bak
+*.rc.tmp
+*.corrupt-*
+*.log
+*.log.old
+backups/
+thumbs/
+
+# IDE & OS files
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
+.DS_Store
