@@ -12,7 +12,11 @@
 
 *Manage all your Windows **RDP** and Linux/macOS **VNC** servers in one dark-themed, responsive grid of live and static preview tiles — distributed as a single ~150 KB portable `.exe` with zero install and zero runtime dependencies.*
 
-[Download Latest Release](https://github.com/TinToSer/Remo-Console/releases/latest) · [Features](#features) · [Comparison](#why-remo-console) · [Build from Source](#build-from-source) · [FAQ](#faq)
+[Download Latest Release](https://github.com/TinToSer/Remo-Console/releases/latest) · [Website & Guides](https://tintoser.github.io/Remo-Console/) · [Features](#features) · [Comparison](#why-remo-console) · [FAQ](#faq)
+
+<br>
+
+<img src="docs/assets/dashboard-preview.png" alt="Remo-Console dashboard showing pinned favorites and grouped RDP/VNC server cards" width="900">
 
 </div>
 

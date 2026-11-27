@@ -3,17 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Remo-Console — Lightweight Portable Windows RDP &amp; VNC Remote Desktop Manager</title>
-  <meta name="description" content="Remo-Console is a fast, open-source, single-executable RDP and VNC remote desktop manager for Windows with live preview cards, DPAPI encryption, and zero dependencies.">
-  <meta name="keywords" content="Remo-Console, Windows RDP client, VNC client, remote desktop manager, mRemoteNG alternative, RDCMan alternative, portable RDP VNC, live preview cards, open source">
+  <title>Remo-Console — Fast, Portable Windows RDP &amp; VNC Manager with Live Preview Cards</title>
+  <meta name="description" content="Remo-Console is a lightweight, open-source, single-EXE RDP and VNC remote desktop manager for Windows with live preview cards, collapsible groups, DPAPI encryption, and zero dependencies.">
+  <meta name="keywords" content="Remo-Console, Windows RDP client, VNC client, remote desktop manager, mRemoteNG alternative, RDCMan alternative, portable RDP VNC, live preview cards, homelab, sysadmin">
   <link rel="canonical" href="https://tintoser.github.io/Remo-Console/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Remo-Console — Windows RDP &amp; VNC Manager with Live Preview Cards">
-  <meta property="og:description" content="Manage RDP and VNC servers in one dark-themed, responsive grid of live and static cards. Single portable ~150 KB Windows executable, zero dependencies.">
+  <meta property="og:title" content="Remo-Console — All Your RDP &amp; VNC Servers in One Fast Dashboard">
+  <meta property="og:description" content="Single ~155 KB portable Windows executable. Live &amp; static preview cards, collapsible groups, pinned favorites, DPAPI encryption, and zero telemetry.">
   <meta property="og:url" content="https://tintoser.github.io/Remo-Console/">
+  <meta property="og:image" content="https://tintoser.github.io/Remo-Console/assets/dashboard-preview.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Remo-Console — Windows RDP &amp; VNC Remote Desktop Manager">
-  <meta name="twitter:description" content="Single-EXE portable RDP + VNC dashboard for Windows with live preview cards, DPAPI encryption, and crash-safe storage.">
+  <meta name="twitter:title" content="Remo-Console — Windows RDP &amp; VNC Manager">
+  <meta name="twitter:description" content="Manage RDP &amp; VNC servers in one dark-themed dashboard of live &amp; static cards. Portable single EXE, zero dependencies.">
+  <meta name="twitter:image" content="https://tintoser.github.io/Remo-Console/assets/dashboard-preview.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -26,64 +28,435 @@
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "url": "https://github.com/TinToSer/Remo-Console",
     "downloadUrl": "https://github.com/TinToSer/Remo-Console/releases/latest",
-    "description": "Lightweight, portable Windows RDP and VNC remote-control console with live preview cards, crash-safe SHA-256 storage, and Windows DPAPI password encryption."
+    "screenshot": "https://tintoser.github.io/Remo-Console/assets/dashboard-preview.png",
+    "description": "Lightweight, portable Windows RDP and VNC remote-control console with live preview cards, collapsible groups, pinned favorites, crash-safe SHA-256 storage, and Windows DPAPI password encryption."
   }
   </script>
   <style>
-    :root { --bg:#111319; --surface:#171a21; --card:#1b1f28; --border:#2a303d; --accent:#4d8aff; --ok:#34c77b; --text:#e9edf5; --muted:#8b94a6; }
+    :root {
+      --bg:#0d1017; --surface:#141821; --card:#191e2a; --card-hover:#202636;
+      --border:#262d3d; --border-strong:#384259;
+      --accent:#4d8aff; --accent-hover:#6aa0ff; --ok:#34c77b; --warn:#f5b041; --vnc:#34c287;
+      --text:#eef2fa; --muted:#949fb5; --dim:#636e85;
+    }
     * { box-sizing:border-box; }
-    body { margin:0; font-family:"Segoe UI",system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; font-family:"Segoe UI",system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.65; overflow-x:hidden; }
     a { color:var(--accent); text-decoration:none; }
     a:hover { text-decoration:underline; }
-    .wrap { max-width:980px; margin:0 auto; padding:48px 24px; }
-    header { text-align:center; padding:36px 0 48px; }
-    .badge { display:inline-block; padding:4px 12px; border-radius:999px; background:rgba(77,138,255,.15); color:var(--accent); font-size:13px; font-weight:600; margin-bottom:14px; }
-    h1 { font-size:clamp(2rem,5vw,3.1rem); margin:0 0 14px; letter-spacing:-.02em; }
-    .sub { color:var(--muted); font-size:1.15rem; max-width:680px; margin:0 auto 28px; }
-    .cta { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
-    .btn { display:inline-block; padding:12px 24px; border-radius:8px; font-weight:600; font-size:15px; }
-    .btn-primary { background:var(--accent); color:#fff; }
-    .btn-primary:hover { background:#689eff; text-decoration:none; }
-    .btn-sec { background:var(--card); color:var(--text); border:1px solid var(--border); }
-    .btn-sec:hover { border-color:var(--accent); text-decoration:none; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; margin:32px 0 48px; }
-    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:22px; }
-    .card h3 { margin:0 0 8px; font-size:1.05rem; }
-    .card p { margin:0; color:var(--muted); font-size:.95rem; }
-    pre { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; overflow-x:auto; color:#d7e1f7; }
-    footer { text-align:center; color:var(--muted); border-top:1px solid var(--border); padding-top:24px; font-size:.9rem; }
+
+    /* Ambient top glow */
+    .glow {
+      position:fixed; inset:0 0 auto 0; height:640px; pointer-events:none; z-index:-1;
+      background:
+        radial-gradient(60% 50% at 50% -10%, rgba(77,138,255,.22), transparent 70%),
+        radial-gradient(35% 35% at 82% 15%, rgba(52,199,123,.10), transparent 70%);
+    }
+
+    /* Sticky nav */
+    nav {
+      position:sticky; top:0; z-index:50;
+      backdrop-filter:blur(14px); background:rgba(13,16,23,.82);
+      border-bottom:1px solid rgba(38,45,61,.8);
+    }
+    .nav-inner { max-width:1120px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.08rem; color:var(--text); }
+    .brand:hover { text-decoration:none; }
+    .brand-icon { width:30px; height:30px; border-radius:8px; background:linear-gradient(135deg,#689eff,#3a70e6); display:grid; place-items:center; box-shadow:0 4px 14px rgba(77,138,255,.35); }
+    .nav-links { display:flex; align-items:center; gap:22px; font-size:.93rem; }
+    .nav-links a { color:var(--muted); font-weight:500; }
+    .nav-links a:hover { color:var(--text); text-decoration:none; }
+    .nav-cta { padding:8px 16px; border-radius:8px; background:var(--accent); color:#fff !important; font-weight:600; }
+    .nav-cta:hover { background:var(--accent-hover); }
+
+    .wrap { max-width:1120px; margin:0 auto; padding:0 24px; }
+
+    /* Hero */
+    .hero { text-align:center; padding:64px 0 40px; }
+    .pill {
+      display:inline-flex; align-items:center; gap:8px; padding:6px 14px; border-radius:999px;
+      background:rgba(77,138,255,.12); border:1px solid rgba(77,138,255,.3);
+      color:#9bc0ff; font-size:13px; font-weight:600; margin-bottom:20px;
+    }
+    .pill-dot { width:7px; height:7px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px var(--ok); }
+    h1 { font-size:clamp(2.2rem,5.2vw,3.6rem); line-height:1.12; margin:0 auto 18px; max-width:860px; letter-spacing:-.03em; }
+    .grad { background:linear-gradient(90deg,#fff 20%,#8bb8ff 70%,#5ce1a6 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .sub { color:var(--muted); font-size:1.15rem; max-width:690px; margin:0 auto 30px; }
+    .cta { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:26px; }
+    .btn { display:inline-flex; align-items:center; gap:9px; padding:13px 26px; border-radius:10px; font-weight:600; font-size:15px; transition:all .15s ease; }
+    .btn-primary { background:var(--accent); color:#fff; box-shadow:0 8px 24px rgba(77,138,255,.32); }
+    .btn-primary:hover { background:var(--accent-hover); transform:translateY(-1px); text-decoration:none; }
+    .btn-sec { background:var(--card); color:var(--text); border:1px solid var(--border-strong); }
+    .btn-sec:hover { border-color:var(--accent); background:var(--card-hover); transform:translateY(-1px); text-decoration:none; }
+
+    .trust { display:flex; justify-content:center; flex-wrap:wrap; gap:10px 24px; color:var(--muted); font-size:.88rem; margin-bottom:44px; }
+    .trust span { display:inline-flex; align-items:center; gap:6px; }
+    .trust svg { color:var(--ok); }
+
+    /* Screenshot frame */
+    .shot-frame {
+      position:relative; border-radius:16px; padding:10px;
+      background:linear-gradient(180deg,rgba(77,138,255,.28),rgba(38,45,61,.5));
+      box-shadow:0 30px 90px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.04);
+      max-width:1040px; margin:0 auto;
+    }
+    .shot-frame img { display:block; width:100%; height:auto; border-radius:10px; background:#111319; cursor:zoom-in; }
+    .shot-caption { margin-top:14px; color:var(--dim); font-size:.86rem; }
+
+    /* Section headings */
+    section { padding:68px 0; }
+    .sec-head { text-align:center; max-width:680px; margin:0 auto 42px; }
+    .sec-label { color:var(--accent); font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px; }
+    h2 { font-size:clamp(1.65rem,3.4vw,2.25rem); margin:0 0 12px; letter-spacing:-.02em; }
+    .sec-head p { margin:0; color:var(--muted); font-size:1.02rem; }
+
+    /* Bento feature grid */
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+    .card {
+      background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px;
+      transition:border-color .15s ease, transform .15s ease;
+    }
+    .card:hover { border-color:var(--border-strong); transform:translateY(-2px); }
+    .ic { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; margin-bottom:14px; background:rgba(77,138,255,.12); color:var(--accent); }
+    .ic.green { background:rgba(52,199,123,.12); color:var(--ok); }
+    .ic.gold { background:rgba(245,176,65,.12); color:var(--warn); }
+    .card h3 { margin:0 0 8px; font-size:1.08rem; }
+    .card p { margin:0; color:var(--muted); font-size:.94rem; }
+
+    /* Interactive Tabs Guide */
+    .guide-shell { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+    .guide-tabs { display:flex; flex-wrap:wrap; border-bottom:1px solid var(--border); background:rgba(255,255,255,.015); padding:8px; gap:6px; }
+    .gtab {
+      border:1px solid transparent; background:transparent; color:var(--muted);
+      padding:10px 16px; border-radius:9px; font-family:inherit; font-size:.92rem; font-weight:600; cursor:pointer;
+      transition:all .15s ease;
+    }
+    .gtab:hover { color:var(--text); background:rgba(255,255,255,.04); }
+    .gtab.active { color:#fff; background:rgba(77,138,255,.18); border-color:rgba(77,138,255,.45); }
+    .gpanel { display:none; padding:28px; }
+    .gpanel.active { display:block; }
+    .steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+    .step { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+    .step-num {
+      width:28px; height:28px; border-radius:8px; background:rgba(77,138,255,.18); color:var(--accent);
+      font-weight:700; font-size:.88rem; display:grid; place-items:center; margin-bottom:12px;
+    }
+    .step h4 { margin:0 0 6px; font-size:1rem; }
+    .step p { margin:0; color:var(--muted); font-size:.91rem; }
+    .kbd {
+      display:inline-block; padding:1px 7px; border-radius:5px; font-size:.82rem; font-family:Consolas,monospace;
+      background:var(--bg); border:1px solid var(--border-strong); color:var(--text);
+    }
+
+    /* Comparison table */
+    .tbl-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:.94rem; }
+    th, td { padding:14px 16px; text-align:left; border-bottom:1px solid var(--border); }
+    th { background:rgba(255,255,255,.02); color:var(--muted); font-weight:600; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; }
+    tr:last-child td { border-bottom:none; }
+    td.yes { color:var(--ok); font-weight:600; }
+    td.no { color:var(--dim); }
+    th.hi, td.hi { background:rgba(77,138,255,.07); }
+
+    /* Code block with copy button */
+    .code-box { position:relative; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; overflow-x:auto; }
+    .code-box pre { margin:0; font-family:Consolas,"Cascadia Code",monospace; font-size:.9rem; color:#d7e3fc; }
+    .copy-btn {
+      position:absolute; top:12px; right:12px; padding:6px 12px; border-radius:7px;
+      border:1px solid var(--border-strong); background:var(--card); color:var(--muted);
+      font-family:inherit; font-size:.8rem; font-weight:600; cursor:pointer;
+    }
+    .copy-btn:hover { color:var(--text); border-color:var(--accent); }
+
+    /* FAQ */
+    .faq { max-width:820px; margin:0 auto; display:grid; gap:12px; }
+    details { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 20px; }
+    summary { cursor:pointer; font-weight:600; font-size:1rem; list-style:none; display:flex; justify-content:space-between; align-items:center; }
+    summary::after { content:"+"; color:var(--accent); font-size:1.25rem; font-weight:400; }
+    details[open] summary::after { content:"−"; }
+    details p { margin:12px 0 0; color:var(--muted); font-size:.94rem; }
+
+    /* Bottom CTA */
+    .banner {
+      text-align:center; padding:48px 28px; border-radius:18px;
+      background:linear-gradient(135deg,rgba(77,138,255,.16),rgba(52,199,123,.10));
+      border:1px solid rgba(77,138,255,.32);
+    }
+    .banner h2 { margin-bottom:10px; }
+    .banner p { color:var(--muted); max-width:560px; margin:0 auto 24px; }
+
+    footer { text-align:center; color:var(--dim); border-top:1px solid var(--border); padding:28px 24px 40px; font-size:.88rem; margin-top:48px; }
+
+    /* Lightbox */
+    .lightbox {
+      display:none; position:fixed; inset:0; z-index:100; background:rgba(6,8,12,.92);
+      place-items:center; padding:24px; cursor:zoom-out;
+    }
+    .lightbox.open { display:grid; }
+    .lightbox img { max-width:96vw; max-height:92vh; border-radius:10px; box-shadow:0 24px 80px rgba(0,0,0,.8); }
+
+    @media (max-width:720px) {
+      .nav-links a:not(.nav-cta) { display:none; }
+      .hero { padding-top:40px; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="badge">Open Source · MIT License · Windows x64</div>
-      <h1>Remo-Console</h1>
-      <p class="sub">A lightweight, single-executable <strong>RDP &amp; VNC Remote Desktop Manager</strong> for Windows with live preview cards, DPAPI encryption, and zero dependencies.</p>
-      <div class="cta">
-        <a class="btn btn-primary" href="https://github.com/TinToSer/Remo-Console/releases/latest">Download Latest Release</a>
-        <a class="btn btn-sec" href="https://github.com/TinToSer/Remo-Console">View on GitHub</a>
-      </div>
-    </header>
+  <div class="glow"></div>
 
-    <section class="grid">
-      <div class="card"><h3>Smart Groups &amp; Live Cards</h3><p>Organize servers with collapsible groups, pinned favorites, protocol filters, and multi-mode sorting. Switch any host or entire group between live session preview and static thumbnail.</p></div>
-      <div class="card"><h3>Native RDP + Custom VNC</h3><p>Uses Microsoft's native <code>mstscax</code> RDP engine alongside a custom RFB 3.3–3.8 VNC client supporting ZRLE, Hextile, RRE, CopyRect, Raw, and local hardware cursors.</p></div>
-      <div class="card"><h3>Single Portable EXE</h3><p>No installer, no Electron bloat, and no SDK required to compile — builds directly with Windows' built-in .NET Framework 4.x C# compiler.</p></div>
-      <div class="card"><h3>Crash-Safe &amp; Encrypted</h3><p>Passwords are encrypted at rest with Windows DPAPI. Every save is SHA-256 verified, flushed to disk, atomically swapped, and backed up automatically.</p></div>
+  <nav>
+    <div class="nav-inner">
+      <a class="brand" href="#">
+        <span class="brand-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </span>
+        Remo-Console
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#guides">User Guides</a>
+        <a href="#compare">Compare</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/TinToSer/Remo-Console">GitHub</a>
+        <a class="nav-cta" href="https://github.com/TinToSer/Remo-Console/releases/latest">Download v1.1.0</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="pill"><span class="pill-dot"></span> v1.1.0 Released · Collapsible Groups, Pinned Favorites &amp; Smart Sorting</div>
+      <h1>All Your <span class="grad">RDP &amp; VNC Servers</span>.<br>One Fast Dashboard.</h1>
+      <p class="sub">Monitor and control Windows, Linux, and homelab machines from a single dark-themed grid of live and static preview cards. Ships as one ~155 KB portable Windows executable with zero dependencies.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/TinToSer/Remo-Console/releases/latest">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download for Windows (x64)
+        </a>
+        <a class="btn btn-sec" href="https://github.com/TinToSer/Remo-Console">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.93c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .3.21.66.79.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+          Star on GitHub
+        </a>
+      </div>
+      <div class="trust">
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Single Portable EXE (~155 KB)</span>
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> No Installer or Admin Rights</span>
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Windows DPAPI Encryption</span>
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 100% Offline &amp; MIT Open Source</span>
+      </div>
+
+      <div class="shot-frame">
+        <img id="heroShot" src="assets/dashboard-preview.png" alt="Remo-Console dashboard with pinned favorites and grouped RDP and VNC cards">
+      </div>
+      <div class="shot-caption">Click screenshot to zoom · Responsive Grid &amp; Tabs dashboard showing Pinned favorites and collapsible host groups</div>
     </section>
 
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="sec-head">
+        <div class="sec-label">Built for Speed &amp; Clarity</div>
+        <h2>Everything you need. Zero Electron bloat.</h2>
+        <p>Designed for sysadmins, DevOps engineers, and homelabbers who want instant visual control over dozens of remote machines.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+          <h3>Live &amp; Static Preview Cards</h3>
+          <p>Toggle any host — or an entire group — between <strong>LIVE</strong> (real running session inside the tile) and <strong>STATIC</strong> (last captured screenshot with 1-minute TCP reachability checks).</p>
+        </div>
+        <div class="card">
+          <div class="ic gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <h3>Smart Groups &amp; Pinned Favorites</h3>
+          <p>Pin mission-critical servers to the top, collapse or expand groups on click, rename groups in bulk, move cards from the menu, filter by RDP/VNC, and sort by recency or status.</p>
+        </div>
+        <div class="card">
+          <div class="ic green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <h3>Native RDP + Custom VNC Engine</h3>
+          <p>Embeds Microsoft's native <code>mstscax</code> RDP engine (NLA/CredSSP, clipboard, drives, audio, plus <code>mstsc.exe</code> fallback) alongside a custom RFB 3.3–3.8 VNC client with ZRLE and hardware cursors.</p>
+        </div>
+        <div class="card">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <h3>Crash-Safe Storage &amp; DPAPI</h3>
+          <p>Passwords are encrypted at rest with Windows DPAPI (your user + PC only). Every save uses <code>WriteThrough</code>, SHA-256 verification, atomic swap, 30 rolling backups, and corruption quarantine.</p>
+        </div>
+        <div class="card">
+          <div class="ic green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <h3>Engineered for Low CPU</h3>
+          <p>64 KB buffered VNC reads, direct GDI <code>StretchDIBits</code> rendering, staggered auto-reconnects, and automatic ~3 fps preview throttling that switches to full frame rate the instant you open a card.</p>
+        </div>
+        <div class="card">
+          <div class="ic gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <h3>Zero-SDK Build &amp; Portable Mode</h3>
+          <p>Run straight from a USB drive with <code>--data .\data</code>, export/import password-free JSON, or compile from source in 2 seconds using the built-in Windows C# compiler.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE GUIDES -->
+    <section id="guides">
+      <div class="sec-head">
+        <div class="sec-label">Interactive Quick-Start Guides</div>
+        <h2>Intuitive from minute one</h2>
+        <p>Pick a workflow below to see how to get the most out of Remo-Console.</p>
+      </div>
+      <div class="guide-shell">
+        <div class="guide-tabs" role="tablist">
+          <button class="gtab active" data-tab="g1">1. Quick Start (30s)</button>
+          <button class="gtab" data-tab="g2">2. Groups, Pinning &amp; Sorting</button>
+          <button class="gtab" data-tab="g3">3. Live vs Static Cards</button>
+          <button class="gtab" data-tab="g4">4. Portable USB &amp; CLI</button>
+        </div>
+
+        <div class="gpanel active" id="g1">
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><h4>Download &amp; Run</h4><p>Grab <code>Remo-Console.exe</code> from <a href="https://github.com/TinToSer/Remo-Console/releases/latest">GitHub Releases</a> and double-click it. No installer, no admin prompt.</p></div>
+            <div class="step"><div class="step-num">2</div><h4>Add Your First Host</h4><p>Press <span class="kbd">Ctrl+N</span> (or click <strong>Add connection</strong>), choose <strong>RDP</strong> or <strong>VNC</strong>, enter the hostname/IP, and optionally assign a group.</p></div>
+            <div class="step"><div class="step-num">3</div><h4>Connect &amp; Focus</h4><p>Double-click any card or click <strong>Open</strong> to jump into full interactive mode. Press <span class="kbd">F11</span> for fullscreen; close to return to the grid.</p></div>
+          </div>
+        </div>
+
+        <div class="gpanel" id="g2">
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><h4>Pin Your Top Servers</h4><p>Click <strong>⋯</strong> on any card → <strong>Pin to top</strong>. Pinned hosts always appear in the <strong>★ Pinned</strong> section at the top of the dashboard.</p></div>
+            <div class="step"><div class="step-num">2</div><h4>Collapse &amp; Bulk-Manage Groups</h4><p>Click any group header to collapse/expand it (auto-expands when searching with <span class="kbd">Ctrl+F</span>). Hover a group header and click <strong>⋯</strong> to flip the whole group Live/Static or rename it.</p></div>
+            <div class="step"><div class="step-num">3</div><h4>Move, Filter &amp; Sort</h4><p>Use <strong>⋯ → Move to group</strong> on any card to reorganize instantly. Click the <strong>All groups</strong> filter button to filter by RDP/VNC or sort by Name, Recently connected, Protocol, or Status.</p></div>
+          </div>
+        </div>
+
+        <div class="gpanel" id="g3">
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><h4>Static Mode (Zero Overhead)</h4><p>Static cards display the last captured desktop screenshot without holding a connection open. A subtle green/red dot shows 1-minute TCP port reachability and latency on hover.</p></div>
+            <div class="step"><div class="step-num">2</div><h4>Live Preview Mode</h4><p>Switch a card, a group, or <strong>All cards</strong> to <strong>Live</strong> to stream active sessions right inside the tiles (throttled to ~3 fps in preview to keep CPU low).</p></div>
+            <div class="step"><div class="step-num">3</div><h4>Grid vs Tabs &amp; Fit</h4><p>Drag the size slider or click <strong>Fit</strong> to pack all tiles cleanly without scrolling. Switch to <strong>Tabs</strong> mode anytime if you prefer a classic browser-style tab bar.</p></div>
+          </div>
+        </div>
+
+        <div class="gpanel" id="g4">
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><h4>Portable USB Folder</h4><p>Run <code>Remo-Console.exe --data .\data</code> to keep <code>data.rc</code>, thumbnails, backups, and logs right next to the executable.</p></div>
+            <div class="step"><div class="step-num">2</div><h4>Safe Team Sharing</h4><p>Open the <strong>☰</strong> menu → <strong>Export connections (no passwords)</strong> to share host inventories as clean JSON without ever leaking credentials.</p></div>
+            <div class="step"><div class="step-num">3</div><h4>Built-In Diagnostics</h4><p>Run <code>Remo-Console.exe --selftest</code> to verify SHA-256 crash recovery, DPAPI encryption, DES crypto, and the full VNC/RFB loopback pipeline.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPARISON -->
+    <section id="compare">
+      <div class="sec-head">
+        <div class="sec-label">How It Compares</div>
+        <h2>Why teams switch to Remo-Console</h2>
+        <p>Lightweight portability meets modern visual server management.</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="hi">Remo-Console</th>
+              <th>mstsc.exe</th>
+              <th>RDCMan</th>
+              <th>mRemoteNG</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>RDP + VNC unified dashboard</td><td class="hi yes">✓ Yes</td><td class="no">RDP only</td><td class="no">RDP only</td><td>Yes</td></tr>
+            <tr><td>Live preview grid + Fit layout</td><td class="hi yes">✓ Yes</td><td class="no">No</td><td>Basic</td><td class="no">No</td></tr>
+            <tr><td>Collapsible groups &amp; Pinned favorites</td><td class="hi yes">✓ Yes</td><td class="no">No</td><td>Groups only</td><td>Tree only</td></tr>
+            <tr><td>Static screenshot + TCP reachability dot</td><td class="hi yes">✓ Yes</td><td class="no">No</td><td class="no">No</td><td class="no">No</td></tr>
+            <tr><td>Single portable EXE (~155 KB)</td><td class="hi yes">✓ Yes</td><td>Built-in</td><td>Portable</td><td class="no">Heavy install</td></tr>
+            <tr><td>Crash-safe SHA-256 storage + 30 backups</td><td class="hi yes">✓ Yes</td><td class="no">No</td><td class="no">No</td><td class="no">No</td></tr>
+            <tr><td>100% offline / zero telemetry</td><td class="hi yes">✓ Yes</td><td>N/A</td><td>Yes</td><td>Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- BUILD FROM SOURCE -->
     <section>
-      <h2>Build from Source</h2>
-      <pre><code>git clone https://github.com/TinToSer/Remo-Console.git
+      <div class="sec-head">
+        <div class="sec-label">Zero-SDK Build</div>
+        <h2>Build from source in 2 seconds</h2>
+        <p>No Visual Studio or .NET SDK required — compiles directly with the C# compiler built into Windows.</p>
+      </div>
+      <div class="code-box">
+        <button class="copy-btn" id="copyCmd">Copy</button>
+        <pre id="cmdText">git clone https://github.com/TinToSer/Remo-Console.git
 cd Remo-Console
 .\build.ps1
-.\bin\Remo-Console.exe --selftest</code></pre>
+.\bin\Remo-Console.exe --selftest
+.\bin\Remo-Console.exe</pre>
+      </div>
     </section>
 
-    <footer>
-      Remo-Console is open source under the <a href="https://github.com/TinToSer/Remo-Console/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/TinToSer/Remo-Console/issues">Report an Issue</a>
-    </footer>
-  </div>
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="sec-head">
+        <div class="sec-label">FAQ</div>
+        <h2>Frequently asked questions</h2>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>Does Remo-Console send any telemetry or connect to external servers?</summary>
+          <p>Never. Remo-Console is 100% offline and only initiates network connections to the RDP and VNC hosts you explicitly add.</p>
+        </details>
+        <details>
+          <summary>How are my saved passwords protected?</summary>
+          <p>Passwords are encrypted at rest using Windows DPAPI (<code>DataProtectionScope.CurrentUser</code>), meaning only your Windows user account on the same PC can decrypt them. Connection exports always strip passwords.</p>
+        </details>
+        <details>
+          <summary>What happens if my PC crashes while saving?</summary>
+          <p>Every save writes to a temporary file with <code>WriteThrough</code>, verifies its SHA-256 checksum, and atomically swaps via <code>File.Replace</code>. Up to 30 rolling backups are kept in <code>backups\</code>, and any unreadable file is quarantined rather than deleted.</p>
+        </details>
+        <details>
+          <summary>What are the system requirements?</summary>
+          <p>Windows 10 or Windows 11 (x64) with .NET Framework 4.x (already pre-installed on Windows).</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- BOTTOM CTA -->
+    <section>
+      <div class="banner">
+        <h2>Ready to simplify your remote sessions?</h2>
+        <p>Download the single portable executable and organize all your RDP and VNC servers in under a minute.</p>
+        <div class="cta" style="margin-bottom:0">
+          <a class="btn btn-primary" href="https://github.com/TinToSer/Remo-Console/releases/latest">Download Remo-Console v1.1.0</a>
+          <a class="btn btn-sec" href="https://github.com/TinToSer/Remo-Console">Browse Source on GitHub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Remo-Console is open source under the <a href="https://github.com/TinToSer/Remo-Console/blob/main/LICENSE">MIT License</a> ·
+    <a href="https://github.com/TinToSer/Remo-Console/releases">Releases</a> ·
+    <a href="https://github.com/TinToSer/Remo-Console/blob/main/CHANGELOG.md">Changelog</a> ·
+    <a href="https://github.com/TinToSer/Remo-Console/issues">Report an Issue</a>
+  </footer>
+
+  <div class="lightbox" id="lb"><img src="assets/dashboard-preview.png" alt="Remo-Console dashboard full preview"></div>
+
+  <script>
+    document.querySelectorAll('.gtab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.gtab, .gpanel').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+    const lb = document.getElementById('lb');
+    document.getElementById('heroShot').addEventListener('click', () => lb.classList.add('open'));
+    lb.addEventListener('click', () => lb.classList.remove('open'));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('open'); });
+    const copyBtn = document.getElementById('copyCmd');
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(document.getElementById('cmdText').textContent).then(() => {
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+      });
+    });
+  </script>
 </body>
 </html>
