@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -92,12 +93,12 @@ namespace RemoConsole
         readonly Field name, addr, user, domain, pwd, group, notes;
         readonly NumField port, w, h;
         readonly Segmented proto, mode, depth;
-        readonly Toggle nla, clip, drives, printers, audio, viewOnly, clearPwd;
+        readonly Toggle nla, clip, drives, printers, audio, viewOnly, clearPwd, pinned;
         readonly Label pwdNote;
         readonly Control[] rdpOnly, vncOnly;
 
-        public HostDialog(Host existing) : base(existing == null ? "Add connection" : "Edit connection",
-            null, "Save", 620, 704)
+        public HostDialog(Host existing, IEnumerable<string> existingGroups = null) : base(existing == null ? "Add connection" : "Edit connection",
+            null, "Save", 620, 738)
         {
             src = existing;
             AcceptButton = ok;
@@ -122,8 +123,12 @@ namespace RemoConsole
 
             Section("Organise");
             group = new Field("e.g. Production");
+            if (existingGroups != null) group.SetSuggestions(existingGroups);
             mode = new Segmented("Default", "Live", "Static") { Tints = new[] { Theme.Accent, Theme.Ok, Theme.Muted } };
             Row(new[] { "Group", "Dashboard card" }, new Control[] { group, mode }, new[] { 1, 1 });
+            pinned = new Toggle("Pin to top (favorites)");
+            pinned.Left = PadX; pinned.Top = y - Theme.S(4); body.Controls.Add(pinned);
+            y += pinned.Height + Theme.S(6);
             notes = new Field("Notes", null, true); notes.Height = Theme.S(48);
             Row(new[] { "Notes" }, new Control[] { notes });
 
@@ -149,7 +154,7 @@ namespace RemoConsole
             Host s = existing ?? new Host();
             name.Text = s.Name; addr.Text = s.Address; port.Value = s.Port;
             proto.SelectedText = s.Protocol; user.Text = s.Username; domain.Text = s.Domain;
-            group.Text = s.Group; notes.Text = s.Notes; mode.SelectedText = s.CardMode;
+            group.Text = s.Group; notes.Text = s.Notes; mode.SelectedText = s.CardMode; pinned.Checked = s.Pinned;
             w.Value = s.Width; h.Value = s.Height;
             depth.SelectedText = s.ColorDepth.ToString(); if (depth.Selected < 0) depth.Selected = 0;
             nla.Checked = s.Nla; clip.Checked = s.RedirectClipboard; drives.Checked = s.RedirectDrives; printers.Checked = s.RedirectPrinters; audio.Checked = s.Audio;
@@ -198,7 +203,7 @@ namespace RemoConsole
             r.Name = string.IsNullOrWhiteSpace(name.Text) ? r.Address : name.Text.Trim();
             r.Protocol = proto.SelectedText; r.Port = port.Value;
             r.Username = user.Text.Trim(); r.Domain = domain.Text.Trim();
-            r.Group = group.Text.Trim(); r.Notes = notes.Text; r.CardMode = mode.SelectedText == "" ? "Default" : mode.SelectedText;
+            r.Group = group.Text.Trim(); r.Notes = notes.Text; r.Pinned = pinned.Checked; r.CardMode = mode.SelectedText == "" ? "Default" : mode.SelectedText;
             r.Width = w.Value; r.Height = h.Value;
             int d; r.ColorDepth = int.TryParse(depth.SelectedText, out d) ? d : 32;
             r.Nla = nla.Checked; r.RedirectClipboard = clip.Checked; r.RedirectDrives = drives.Checked;
@@ -226,6 +231,28 @@ namespace RemoConsole
             Row(new string[] { null }, new Control[] { remember });
             ok.Click += delegate { DialogResult = DialogResult.OK; };
             Shown += delegate { box.Focus(); };
+        }
+    }
+
+    class InputDialog : DialogBase
+    {
+        readonly Field box;
+        public string Value { get { return (box.Text ?? "").Trim(); } }
+
+        public InputDialog(string title, string subtitle, string placeholder, string initialValue, string okText)
+            : base(title, subtitle, okText, 440, 240)
+        {
+            AcceptButton = ok;
+            box = new Field(placeholder);
+            box.Text = initialValue ?? "";
+            Row(new string[] { null }, new Control[] { box });
+            ok.Click += delegate
+            {
+                note.Text = "";
+                if (string.IsNullOrWhiteSpace(box.Text)) { note.Text = "⚠ Value is required."; box.Focus(); return; }
+                DialogResult = DialogResult.OK;
+            };
+            Shown += delegate { box.Focus(); box.SelectAllText(); };
         }
     }
 }

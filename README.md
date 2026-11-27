@@ -69,7 +69,12 @@ Remo-Console compiles directly using the C# compiler (`csc.exe`) pre-installed o
 - **Grid & Tabs Views**:
   - **Grid (default)**: Responsive auto-stretching tile matrix (`4 × 3` readout), smooth tile-size slider, **Fit** button to show all hosts without scrolling, and smooth wheel easing.
   - **Tabs**: Classic browser-style tab strip for juggling multiple active sessions.
-- **Instant Organization**: Live search (`Ctrl+F`), host groups, duplicate, password-free JSON import/export, PNG screenshots, and fullscreen (`F11`).
+- **Smart Grouping, Pinning & Organization**:
+  - **Pinned / Favorites**: Pin key servers to a dedicated **★ Pinned** section at the top of the dashboard.
+  - **Collapsible Group Sections**: Click any group header to collapse or expand it (remembered across restarts; auto-expands during search). Group headers show host count and active live badges, with a `⋯` menu to **Make all Live / Static**, **Rename group**, or **Collapse / Expand all**.
+  - **Quick Move to Group**: Move any card to an existing group, Ungrouped, or a new group directly from its `⋯` menu; the Add/Edit dialog also autocompletes existing group names.
+  - **Filter & Sort**: Instant search (`Ctrl+F`), group filter, **RDP / VNC** protocol filter, and sorting by **Name**, **Recently connected**, **Protocol**, or **Live / connected first**.
+  - Duplicate, password-free JSON import/export, PNG screenshots, and fullscreen (`F11`).
 - **Auto-Reconnect & Reachability Monitoring**: Live cards auto-reconnect with staggered backoff so 30+ hosts never spike CPU/network simultaneously. Static cards run lightweight TCP port probes once a minute (green/red status dot + latency tooltip, toggleable in the `☰` menu).
 - **One-Click `mstsc.exe` Fallback**: Open any RDP host in Windows' stock Remote Desktop client when you need RD Gateway, smart cards, or multi-monitor spans.
 

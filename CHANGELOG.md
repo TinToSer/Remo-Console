@@ -5,6 +5,16 @@ All notable changes to Remo-Console will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-27
+
+### Added
+- **Pinned / Favorites Section**: Pin frequently used hosts to a dedicated `★ Pinned` section at the top of the dashboard (accessible from each card's `⋯` menu or the Edit dialog).
+- **Collapsible Group Headers**: Click any group header to collapse or expand it (persisted across restarts; automatically expands during active search so results are never hidden).
+- **Group-Level Bulk Actions & Live Counts**: Group headers now display total host count and active live count badges, plus a `⋯` / right-click menu to **Make all Live**, **Make all Static**, **Rename group…**, or **Collapse / Expand all**.
+- **Quick "Move to group" Submenu**: Reassign any card to an existing group, Ungrouped, or a brand-new group directly from the card menu without opening the Edit dialog.
+- **Protocol Filter & Sorting**: Filter the dashboard by **RDP only** or **VNC only**, filter by **★ Pinned** or **Ungrouped**, and sort connections by **Name (A–Z)**, **Recently connected**, **Protocol**, or **Live / connected first**.
+- **Group Autocomplete**: The Add/Edit Connection dialog suggests existing group names as you type.
+
 ## [1.0.0] - 2026-11-27
 
 ### Added

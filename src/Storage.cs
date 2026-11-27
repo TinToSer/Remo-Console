@@ -265,26 +265,14 @@ namespace RemoConsole
 
         void SanitizeLoaded()
         {
+            Data.Settings.Sanitize();
             var seen = new HashSet<string>();
             Data.Hosts.RemoveAll(h => h == null);
             foreach (var h in Data.Hosts)
             {
-                if (string.IsNullOrWhiteSpace(h.Id) || !seen.Add(h.Id)) h.Id = Guid.NewGuid().ToString("N");
-                h.Address = (h.Address ?? "").Trim();
-                h.Name = string.IsNullOrWhiteSpace(h.Name) ? h.Address : h.Name.Trim();
-                if (h.Protocol != "RDP" && h.Protocol != "VNC") h.Protocol = "RDP";
-                if (h.Port < 1 || h.Port > 65535) h.Port = h.IsRdp ? 3389 : 5900;
-                h.Username = h.Username ?? "";
-                h.Domain = h.Domain ?? "";
-                h.Pwd = h.Pwd ?? "";
-                h.Group = h.Group ?? "";
-                h.Notes = h.Notes ?? "";
-                if (h.CardMode != "Live" && h.CardMode != "Static") h.CardMode = "Default";
-                h.Width = Math.Max(200, Math.Min(8192, h.Width));
-                h.Height = Math.Max(200, Math.Min(8192, h.Height));
-                if (h.ColorDepth != 15 && h.ColorDepth != 16 && h.ColorDepth != 24 && h.ColorDepth != 32) h.ColorDepth = 32;
+                h.Sanitize();
+                if (!seen.Add(h.Id)) h.Id = Guid.NewGuid().ToString("N");
             }
-            Data.Settings.Sanitize();
         }
 
         public void MarkDirty() { lock (saveLock) dirty = true; }

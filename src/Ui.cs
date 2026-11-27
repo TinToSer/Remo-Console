@@ -33,7 +33,7 @@ namespace RemoConsole
         public const string Add = "\uE710", Search = "\uE721", More = "\uE712", Close = "\uE711", Refresh = "\uE72C",
             Camera = "\uE722", Full = "\uE740", Restore = "\uE73F", Edit = "\uE70F", Delete = "\uE74D", Copy = "\uE8C8",
             Folder = "\uE8B7", Menu = "\uE700", Grid = "\uE80A", Monitor = "\uE7F4", Warning = "\uE7BA", Filter = "\uE71C",
-            Check = "\uE73E", Key = "\uE765", Open = "\uE8A7", Down = "\uE70D", Save = "\uE74E", Lock = "\uE72E";
+            Check = "\uE73E", Key = "\uE765", Open = "\uE8A7", Down = "\uE70D", Right = "\uE76C", Star = "\uE735", Save = "\uE74E", Lock = "\uE72E";
     }
 
     static class Theme
@@ -242,6 +242,15 @@ namespace RemoConsole
         public override string Text { get { return tb.Text; } set { tb.Text = value; } }
         public void SelectAllText() { tb.SelectAll(); }
         public new bool Focus() { return tb.Focus(); }
+        public void SetSuggestions(IEnumerable<string> items)
+        {
+            if (items == null) return;
+            var col = new AutoCompleteStringCollection();
+            foreach (var it in items) if (!string.IsNullOrWhiteSpace(it)) col.Add(it);
+            tb.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            tb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            tb.AutoCompleteCustomSource = col;
+        }
 
         void DoLayout()
         {
@@ -471,22 +480,105 @@ namespace RemoConsole
         }
     }
 
-    /// <summary>Section heading used on the dashboard for host groups.</summary>
+    /// <summary>Interactive collapsible section heading used on the dashboard for host groups and pinned hosts.</summary>
     class GroupHeader : Control
     {
-        public string Caption; public int Count;
-        public GroupHeader(string caption, int count)
+        public string GroupKey;
+        public string Caption;
+        public int Count;
+        public int LiveCount;
+        public bool Collapsed;
+        public bool IsPinnedSection;
+        public event EventHandler ToggleRequested;
+        bool hover, hoverMenu;
+
+        public GroupHeader(string groupKey, string caption, int count, int liveCount, bool collapsed, bool isPinnedSection = false)
         {
-            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
-            Caption = caption; Count = count; Height = Theme.S(34); Margin = new Padding(Theme.S(8), Theme.S(8), Theme.S(8), 0);
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            GroupKey = groupKey; Caption = caption; Count = count; LiveCount = liveCount; Collapsed = collapsed; IsPinnedSection = isPinnedSection;
+            Height = Theme.S(36);
+            Margin = new Padding(Theme.S(8), Theme.S(8), Theme.S(8), 0);
+            Cursor = Cursors.Hand;
         }
+
+        Rectangle MenuRect { get { int d = Theme.S(26); return new Rectangle(Width - d - Theme.S(2), (Height - Theme.S(4) - d) / 2, d, d); } }
+
         protected override void OnPaint(PaintEventArgs e)
         {
-            var g = e.Graphics; g.Clear(Theme.Bg);
-            Theme.Txt(g, Caption.ToUpperInvariant(), Theme.SmallBold, new Rectangle(Theme.S(2), 0, Width, Height - Theme.S(6)), Theme.Muted);
-            int w = TextRenderer.MeasureText(Caption.ToUpperInvariant(), Theme.SmallBold).Width;
-            Theme.Txt(g, Count.ToString(), Theme.SmallBold, new Rectangle(w + Theme.S(12), 0, Theme.S(40), Height - Theme.S(6)), Theme.Dim);
-            using (var p = new Pen(Theme.Border)) g.DrawLine(p, 0, Height - Theme.S(4), Width, Height - Theme.S(4));
+            var g = e.Graphics;
+            g.Clear(Theme.Bg);
+            Theme.Smooth(g);
+            int midH = Height - Theme.S(4);
+            if (hover)
+                Theme.FillRound(g, Color.FromArgb(18, 255, 255, 255), null, new Rectangle(0, Theme.S(2), Width - 1, midH - Theme.S(4)), Theme.S(6));
+
+            int x = Theme.S(4);
+            Theme.DrawIcon(g, Collapsed ? Glyph.Right : Glyph.Down, new Rectangle(x, 0, Theme.S(18), midH), hover ? Theme.Text : Theme.Muted, Theme.IconSmall);
+            x += Theme.S(22);
+            if (IsPinnedSection)
+            {
+                Theme.DrawIcon(g, Glyph.Star, new Rectangle(x, 0, Theme.S(16), midH), Theme.Warn, Theme.IconSmall);
+                x += Theme.S(20);
+            }
+            string cap = Caption.ToUpperInvariant();
+            int cw = TextRenderer.MeasureText(cap, Theme.SmallBold, Size.Empty, TextFormatFlags.NoPadding).Width;
+            Theme.Txt(g, cap, Theme.SmallBold, new Rectangle(x, 0, cw + 4, midH), IsPinnedSection ? Theme.Text : (hover ? Theme.Text : Theme.Muted));
+            x += cw + Theme.S(10);
+
+            string cnt = Count.ToString();
+            int nw = TextRenderer.MeasureText(cnt, Theme.SmallBold, Size.Empty, TextFormatFlags.NoPadding).Width;
+            var pill = new Rectangle(x, (midH - Theme.S(18)) / 2, Math.Max(Theme.S(22), nw + Theme.S(12)), Theme.S(18));
+            Theme.FillRound(g, Theme.Card, Theme.Border, pill, pill.Height / 2);
+            TextRenderer.DrawText(g, cnt, Theme.SmallBold, pill, Theme.Muted, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            x = pill.Right + Theme.S(8);
+
+            if (LiveCount > 0)
+            {
+                string lt = LiveCount + " live";
+                int lw = TextRenderer.MeasureText(lt, Theme.SmallBold, Size.Empty, TextFormatFlags.NoPadding).Width;
+                var lpill = new Rectangle(x, (midH - Theme.S(18)) / 2, lw + Theme.S(18), Theme.S(18));
+                Theme.FillRound(g, Color.FromArgb(30, Theme.Ok), null, lpill, lpill.Height / 2);
+                using (var b = new SolidBrush(Theme.Ok)) g.FillEllipse(b, lpill.X + Theme.S(6), lpill.Y + lpill.Height / 2 - Theme.S(2), Theme.S(5), Theme.S(5));
+                Theme.Txt(g, lt, Theme.SmallBold, new Rectangle(lpill.X + Theme.S(14), lpill.Y, lw + 4, lpill.Height), Theme.Ok);
+                x = lpill.Right + Theme.S(8);
+            }
+
+            if (ContextMenuStrip != null)
+            {
+                var mr = MenuRect;
+                if (hoverMenu) Theme.FillRound(g, Theme.BorderStrong, null, mr, Theme.S(6));
+                if (hover || hoverMenu) Theme.DrawIcon(g, Glyph.More, mr, hoverMenu ? Theme.Text : Theme.Muted);
+            }
+
+            using (var p = new Pen(Theme.Border)) g.DrawLine(p, 0, Height - Theme.S(2), Width, Height - Theme.S(2));
+        }
+
+        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { hover = false; hoverMenu = false; Invalidate(); base.OnMouseLeave(e); }
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            bool hm = ContextMenuStrip != null && MenuRect.Contains(e.Location);
+            if (hm != hoverMenu) { hoverMenu = hm; Invalidate(); }
+            base.OnMouseMove(e);
+        }
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                if (ContextMenuStrip != null && MenuRect.Contains(e.Location))
+                    ContextMenuStrip.Show(this, new Point(MenuRect.Left - Theme.S(130), MenuRect.Bottom + 2));
+                else
+                {
+                    var h = ToggleRequested;
+                    if (h != null) h(this, EventArgs.Empty);
+                }
+            }
+            base.OnMouseUp(e);
+        }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && ContextMenuStrip != null) { var m = ContextMenuStrip; ContextMenuStrip = null; m.Dispose(); }
+            base.Dispose(disposing);
         }
     }
 }

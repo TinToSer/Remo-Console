@@ -118,7 +118,8 @@ namespace RemoConsole
         string InfoText()
         {
             string addr = Host.Address + ":" + Host.Port;
-            string s = Host.Name + "\n" + Host.Protocol + " · " + addr + "\n" + StatusLabel();
+            string s = (Host.Pinned ? "★ " : "") + Host.Name + "\n" + Host.Protocol + " · " + addr + "\n" + StatusLabel();
+            if (!string.IsNullOrEmpty(Host.Group)) s += "\nGroup: " + Host.Group;
             if (IsLive && Status == ViewState.Failed && !string.IsNullOrEmpty(ErrorText)) s += "\n" + ErrorText;
             return s;
         }
@@ -204,11 +205,17 @@ namespace RemoConsole
             }
 
             // ---- footer
-            // one row:  ● Name  [RDP]  ⋯  [Open]      (address + status are in the tooltip)
+            // one row:  ● [★] Name  [RDP]  ⋯  [Open]      (address + status are in the tooltip)
             int fy = Height - FooterH, cy = fy + FooterH / 2 - Theme.S(1);
             using (var b = new SolidBrush(StatusColor())) g.FillEllipse(b, SidePad + Theme.S(5), cy - Theme.S(4), Theme.S(8), Theme.S(8));
             var nr = NameRect;
-            Theme.Txt(g, Host.Name, Theme.UiSemi, new Rectangle(SidePad + Theme.S(20), fy, nr.Right - SidePad - Theme.S(20), FooterH - Theme.S(2)), Theme.Text);
+            int nameLeft = SidePad + Theme.S(20);
+            if (Host.Pinned)
+            {
+                Theme.DrawIcon(g, Glyph.Star, new Rectangle(nameLeft - Theme.S(2), fy, Theme.S(14), FooterH - Theme.S(2)), Theme.Warn, Theme.IconSmall);
+                nameLeft += Theme.S(15);
+            }
+            Theme.Txt(g, Host.Name, Theme.UiSemi, new Rectangle(nameLeft, fy, Math.Max(10, nr.Right - nameLeft), FooterH - Theme.S(2)), Theme.Text);
             if (ShowChip)
             {
                 var chip = new Rectangle(MenuRect.X - Theme.S(6) - Theme.S(38), cy - Theme.S(9), Theme.S(38), Theme.S(18));

@@ -165,7 +165,15 @@ namespace RemoConsole
             search.Width = atLeast(1480) ? Theme.S(280) : wide ? Theme.S(220) : Theme.S(150);
             btnAdd.Label = wide ? "Add connection" : "Add"; btnAdd.AutoFit();
             string g = S.GroupFilter ?? "";
-            btnGroup.Label = wide ? (g == "" ? "All groups" : g) : (g == "" ? "" : (g.Length > 10 ? g.Substring(0, 9) + "…" : g));
+            string p = S.ProtocolFilter ?? "";
+            string gLabel = g == "" ? "All groups" : g == FilterPinned ? "★ Pinned" : g == FilterUngrouped ? "Ungrouped" : g;
+            string full = p == "" ? gLabel : (g == "" ? p + " only" : gLabel + " · " + p);
+            if (wide) btnGroup.Label = full;
+            else
+            {
+                string shortLbl = (g == "" && p == "") ? "" : full;
+                btnGroup.Label = shortLbl.Length > 12 ? shortLbl.Substring(0, 11) + "…" : shortLbl;
+            }
             btnGroup.AutoFit(); btnGroup.Invalidate();
         }
 
@@ -229,16 +237,133 @@ namespace RemoConsole
             Theme.Txt(g, r, Theme.Small, new Rectangle(statusBar.Width - rw - Theme.S(24), 1, rw + 6, statusBar.Height), rc);
         }
 
+        const string FilterPinned = "__PINNED__";
+        const string FilterUngrouped = "__UNGROUPED__";
+
+        List<string> ExistingGroups()
+        {
+            return Hosts.Select(h => h.Group).Where(g => !string.IsNullOrEmpty(g)).Distinct(StringComparer.CurrentCultureIgnoreCase).OrderBy(g => g, StringComparer.CurrentCultureIgnoreCase).ToList();
+        }
+
         void ShowGroupMenu()
         {
             var m = Theme.Menu();
             m.Closed += delegate { BeginInvoke((Action)(() => m.Dispose())); };
             string cur = S.GroupFilter ?? "";
-            Action<string, string> add = (label, value) =>
+            Action<string, string> addG = (label, value) =>
                 Theme.Item(m, (cur == value ? "✓  " : "     ") + label, delegate { S.GroupFilter = value; store.MarkDirty(); RefreshLayout(); });
-            add("All groups", "");
-            foreach (var g in Hosts.Select(h => h.Group).Where(g => !string.IsNullOrEmpty(g)).Distinct().OrderBy(g => g)) add(g, g);
+
+            addG("All groups (" + Hosts.Count + ")", "");
+            int pinCount = Hosts.Count(h => h.Pinned);
+            if (pinCount > 0) addG("★ Pinned (" + pinCount + ")", FilterPinned);
+            var groups = ExistingGroups();
+            foreach (var g in groups)
+                addG(g + " (" + Hosts.Count(h => string.Equals(h.Group, g, StringComparison.CurrentCultureIgnoreCase)) + ")", g);
+            int ungrouped = Hosts.Count(h => string.IsNullOrEmpty(h.Group));
+            if (groups.Count > 0 && ungrouped > 0) addG("Ungrouped (" + ungrouped + ")", FilterUngrouped);
+
+            Theme.Sep(m);
+            string curP = S.ProtocolFilter ?? "";
+            Action<string, string> addP = (label, value) =>
+                Theme.Item(m, (curP == value ? "✓  " : "     ") + label, delegate { S.ProtocolFilter = value; store.MarkDirty(); RefreshLayout(); });
+            addP("All protocols", "");
+            addP("RDP only", "RDP");
+            addP("VNC only", "VNC");
+
+            Theme.Sep(m);
+            string curS = S.SortBy ?? "Name";
+            Action<string, string> addS = (label, value) =>
+                Theme.Item(m, (curS == value ? "✓  " : "     ") + "Sort: " + label, delegate { S.SortBy = value; store.MarkDirty(); RefreshLayout(); });
+            addS("Name (A–Z)", "Name");
+            addS("Recently connected", "Recent");
+            addS("Protocol", "Protocol");
+            addS("Live / connected first", "Status");
+
+            if (headers.Count > 0)
+            {
+                Theme.Sep(m);
+                Theme.Item(m, "     Collapse all groups", delegate { SetAllCollapsed(true); });
+                Theme.Item(m, "     Expand all groups", delegate { SetAllCollapsed(false); });
+            }
             m.Show(btnGroup, new Point(0, btnGroup.Height + 4));
+        }
+
+        void SetAllCollapsed(bool collapsed)
+        {
+            if (S.CollapsedGroups == null) S.CollapsedGroups = new List<string>();
+            S.CollapsedGroups.Clear();
+            if (collapsed)
+            {
+                foreach (var hd in headers)
+                    if (!S.CollapsedGroups.Contains(hd.GroupKey)) S.CollapsedGroups.Add(hd.GroupKey);
+            }
+            store.MarkDirty();
+            RefreshLayout();
+        }
+
+        void ToggleGroupCollapsed(string key)
+        {
+            if (S.CollapsedGroups == null) S.CollapsedGroups = new List<string>();
+            if (S.CollapsedGroups.Contains(key)) S.CollapsedGroups.Remove(key);
+            else S.CollapsedGroups.Add(key);
+            store.MarkDirty();
+            RefreshLayout();
+        }
+
+        void SetGroupMode(IEnumerable<Host> list, string mode)
+        {
+            if (mode != "Live" && mode != "Static") return;
+            foreach (var h in list.ToList()) { h.CardMode = mode; ApplyMode(h); }
+            store.MarkDirty();
+            SyncAllMode();
+            RefreshLayout();
+        }
+
+        void RenameGroup(string oldName)
+        {
+            using (var d = new InputDialog("Rename group", "Rename \"" + oldName + "\" across all connections in this group.", "Group name", oldName, "Rename"))
+            {
+                if (d.ShowDialog(this) != DialogResult.OK) return;
+                string nn = d.Value;
+                if (string.IsNullOrEmpty(nn) || nn == oldName) return;
+                foreach (var h in Hosts)
+                    if (string.Equals(h.Group, oldName, StringComparison.CurrentCultureIgnoreCase)) h.Group = nn;
+                if (string.Equals(S.GroupFilter, oldName, StringComparison.CurrentCultureIgnoreCase)) S.GroupFilter = nn;
+                if (S.CollapsedGroups != null && S.CollapsedGroups.Remove(oldName)) S.CollapsedGroups.Add(nn);
+                store.MarkDirty(); store.Flush();
+                RefreshLayout();
+            }
+        }
+
+        void MoveHostToGroup(Host h, string groupName)
+        {
+            h.Group = (groupName ?? "").Trim();
+            store.MarkDirty(); store.Flush();
+            RefreshLayout();
+        }
+
+        void MoveHostToNewGroup(Host h)
+        {
+            using (var d = new InputDialog("Move to new group", "Enter a new group name for \"" + h.Name + "\".", "e.g. Production", "", "Move"))
+                if (d.ShowDialog(this) == DialogResult.OK) MoveHostToGroup(h, d.Value);
+        }
+
+        ContextMenuStrip BuildGroupMenu(string groupKey, bool isPinnedSection, List<Host> sectionHosts)
+        {
+            var m = Theme.Menu();
+            Theme.Item(m, "Make all Live", delegate { SetGroupMode(sectionHosts, "Live"); });
+            Theme.Item(m, "Make all Static", delegate { SetGroupMode(sectionHosts, "Static"); });
+            if (!isPinnedSection && !string.IsNullOrEmpty(groupKey))
+            {
+                Theme.Sep(m);
+                Theme.Item(m, "Rename group…", delegate { RenameGroup(groupKey); });
+            }
+            Theme.Sep(m);
+            bool col = S.CollapsedGroups != null && S.CollapsedGroups.Contains(groupKey);
+            Theme.Item(m, col ? "Expand section" : "Collapse section", delegate { ToggleGroupCollapsed(groupKey); });
+            Theme.Item(m, "Collapse all", delegate { SetAllCollapsed(true); });
+            Theme.Item(m, "Expand all", delegate { SetAllCollapsed(false); });
+            return m;
         }
 
         void ShowMainMenu()
@@ -360,6 +485,10 @@ namespace RemoConsole
             var tog = Theme.Item(m, "Make static", delegate { ToggleMode(c.Host); });
             Theme.Item(m, "Refresh preview", delegate { RestartView(c.Host); });
             Theme.Sep(m);
+            var pin = Theme.Item(m, "Pin to top", delegate { c.Host.Pinned = !c.Host.Pinned; store.MarkDirty(); store.Flush(); RefreshLayout(); });
+            var move = new ToolStripMenuItem("Move to group") { Padding = new Padding(Theme.S(6), Theme.S(5), Theme.S(6), Theme.S(5)), ForeColor = Theme.Text, BackColor = Theme.Card };
+            m.Items.Add(move);
+            Theme.Sep(m);
             Theme.Item(m, "Edit…", delegate { EditHost(c.Host); });
             Theme.Item(m, "Duplicate", delegate { DuplicateHost(c.Host); });
             Theme.Item(m, "Copy address", delegate { try { Clipboard.SetText(c.Host.Address); } catch { } });
@@ -369,6 +498,18 @@ namespace RemoConsole
             {
                 tog.Text = Mode(c.Host) == "Live" ? "Make static  (stop live preview)" : "Make live  (show running session)";
                 mstsc.Visible = c.Host.IsRdp;
+                pin.Text = c.Host.Pinned ? "Unpin from top" : "Pin to top";
+                move.DropDownItems.Clear();
+                foreach (var g in ExistingGroups())
+                {
+                    string grp = g;
+                    bool same = string.Equals(c.Host.Group, grp, StringComparison.CurrentCultureIgnoreCase);
+                    Theme.Item(move.DropDown, (same ? "✓  " : "     ") + grp, delegate { MoveHostToGroup(c.Host, grp); });
+                }
+                bool noneGrp = string.IsNullOrEmpty(c.Host.Group);
+                Theme.Item(move.DropDown, (noneGrp ? "✓  " : "     ") + "Ungrouped", delegate { MoveHostToGroup(c.Host, ""); });
+                Theme.Sep(move.DropDown);
+                Theme.Item(move.DropDown, "     New group…", delegate { MoveHostToNewGroup(c.Host); });
             };
             return m;
         }
@@ -404,10 +545,42 @@ namespace RemoConsole
             updatingUi = false;
         }
 
-        bool Match(Host h, string want, string q)
+        bool Match(Host h, string want, string proto, string q)
         {
-            return (want == "" || h.Group == want) &&
-                (q == "" || (h.Name + " " + h.Address + " " + h.Group + " " + h.Notes).ToLowerInvariant().Contains(q));
+            if (want == FilterPinned && !h.Pinned) return false;
+            if (want == FilterUngrouped && !string.IsNullOrEmpty(h.Group)) return false;
+            if (want != "" && want != FilterPinned && want != FilterUngrouped && !string.Equals(h.Group, want, StringComparison.CurrentCultureIgnoreCase)) return false;
+            if (proto != "" && h.Protocol != proto) return false;
+            return q == "" || (h.Name + " " + h.Address + " " + h.Group + " " + h.Notes).ToLowerInvariant().Contains(q);
+        }
+
+        int HostRank(Host h)
+        {
+            RemoteView v;
+            if (views.TryGetValue(h.Id, out v))
+            {
+                if (v.State == ViewState.Connected) return 0;
+                if (v.State == ViewState.Connecting) return 1;
+            }
+            if (Mode(h) == "Live") return 2;
+            CardControl c;
+            if (cards.TryGetValue(h.Id, out c) && c.ReachMs >= 0) return 3;
+            return 4;
+        }
+
+        IEnumerable<Host> SortHosts(IEnumerable<Host> src)
+        {
+            switch (S.SortBy)
+            {
+                case "Recent":
+                    return src.OrderByDescending(h => h.LastConnectedUtc).ThenBy(h => h.Name, StringComparer.CurrentCultureIgnoreCase);
+                case "Protocol":
+                    return src.OrderBy(h => h.Protocol, StringComparer.Ordinal).ThenBy(h => h.Name, StringComparer.CurrentCultureIgnoreCase);
+                case "Status":
+                    return src.OrderBy(h => HostRank(h)).ThenBy(h => h.Name, StringComparer.CurrentCultureIgnoreCase);
+                default:
+                    return src.OrderBy(h => h.Name, StringComparer.CurrentCultureIgnoreCase);
+            }
         }
 
         bool laidOutOnce;
@@ -415,34 +588,65 @@ namespace RemoConsole
         void RefreshLayout()
         {
             string want = S.GroupFilter ?? "";
-            var groups = Hosts.Select(h => h.Group).Where(g => !string.IsNullOrEmpty(g)).Distinct().ToList();
-            if (want != "" && !groups.Contains(want)) want = S.GroupFilter = "";
+            string proto = S.ProtocolFilter ?? "";
+            var groups = ExistingGroups();
+            if (want != "" && want != FilterPinned && want != FilterUngrouped && !groups.Any(g => string.Equals(g, want, StringComparison.CurrentCultureIgnoreCase)))
+                want = S.GroupFilter = "";
+            if (want == FilterPinned && !Hosts.Any(h => h.Pinned))
+                want = S.GroupFilter = "";
             LayoutHeader();
 
             string q = (search.Text ?? "").Trim().ToLowerInvariant();
-            var ordered = Hosts.OrderBy(h => string.IsNullOrEmpty(h.Group) ? 1 : 0).ThenBy(h => h.Group ?? "", StringComparer.CurrentCultureIgnoreCase)
-                               .ThenBy(h => h.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
-            bool anyGroups = groups.Count > 0;
+            bool searching = q.Length > 0;
+            var collapsed = new HashSet<string>(S.CollapsedGroups ?? new List<string>());
+
+            foreach (var h in Hosts) { EnsureCard(h); ApplyMode(h); }
+            var matched = Hosts.Where(h => Match(h, want, proto, q)).ToList();
 
             foreach (var hd in headers) { grid.Controls.Remove(hd); hd.Dispose(); }
             headers.Clear();
             var items = new List<Control>();
-            int shown = 0; string lastG = null;
-            foreach (var h in ordered)
+            int shown = matched.Count;
+
+            Action<string, string, List<Host>, bool> addSection = (key, caption, list, isPinned) =>
             {
-                bool match = Match(h, want, q);
-                string g = h.Group ?? "";
-                if (anyGroups && match && lastG != g)
-                {
-                    int count = ordered.Count(x => (x.Group ?? "") == g && Match(x, want, q));
-                    var hd = new GroupHeader(g == "" ? "Ungrouped" : g, count);
-                    headers.Add(hd); items.Add(hd);
-                    lastG = g;
-                }
-                var c = EnsureCard(h);
-                if (match) { items.Add(c); shown++; }
-                ApplyMode(h);
+                bool isCol = !searching && collapsed.Contains(key);
+                int liveCnt = list.Count(x => Mode(x) == "Live");
+                var hd = new GroupHeader(key, caption, list.Count, liveCnt, isCol, isPinned);
+                hd.ToggleRequested += delegate { ToggleGroupCollapsed(key); };
+                hd.ContextMenuStrip = BuildGroupMenu(key, isPinned, list);
+                headers.Add(hd); items.Add(hd);
+                if (!isCol)
+                    foreach (var h in SortHosts(list)) items.Add(EnsureCard(h));
+            };
+
+            bool splitPinned = (want == "" || want == FilterPinned) && matched.Any(h => h.Pinned);
+            var remaining = matched;
+            if (splitPinned)
+            {
+                var pinnedList = matched.Where(h => h.Pinned).ToList();
+                addSection(FilterPinned, "Pinned", pinnedList, true);
+                remaining = matched.Where(h => !h.Pinned).ToList();
             }
+
+            bool showGroupHeaders = groups.Count > 0 || splitPinned;
+            if (showGroupHeaders)
+            {
+                var byGroup = remaining
+                    .GroupBy(h => h.Group ?? "", StringComparer.CurrentCultureIgnoreCase)
+                    .OrderBy(g => string.IsNullOrEmpty(g.Key) ? 1 : 0)
+                    .ThenBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
+                foreach (var grp in byGroup)
+                {
+                    string key = grp.Key;
+                    addSection(key, key == "" ? "Ungrouped" : key, grp.ToList(), false);
+                }
+            }
+            else
+            {
+                foreach (var h in SortHosts(remaining)) items.Add(EnsureCard(h));
+            }
+
             grid.Items.Clear(); grid.Items.AddRange(items);
             grid.TargetWidth = S.CardWidth;
             grid.Relayout(laidOutOnce && IsHandleCreated);
@@ -450,7 +654,7 @@ namespace RemoConsole
 
             bool none = shown == 0;
             if (Hosts.Count == 0) { emptyTitle = "No connections yet"; emptySub = "Add an RDP or VNC host to get started."; }
-            else { emptyTitle = "No matches"; emptySub = "Nothing matches your search or group filter."; }
+            else { emptyTitle = "No matches"; emptySub = "Nothing matches your search or filter."; }
             emptyPanel.Visible = none; grid.Visible = !none;
             PlaceEmptyButton();
             SyncAllMode();
@@ -460,7 +664,7 @@ namespace RemoConsole
         // ------------------------------------------------------------ host CRUD
         void AddHost()
         {
-            using (var d = new HostDialog(null))
+            using (var d = new HostDialog(null, ExistingGroups()))
                 if (d.ShowDialog(this) == DialogResult.OK)
                 {
                     Hosts.Add(d.Result);
@@ -471,7 +675,7 @@ namespace RemoConsole
 
         void EditHost(Host h)
         {
-            using (var d = new HostDialog(h))
+            using (var d = new HostDialog(h, ExistingGroups()))
                 if (d.ShowDialog(this) == DialogResult.OK)
                 {
                     int i = Hosts.IndexOf(h);

@@ -178,20 +178,27 @@ namespace RemoConsole
                 var st4 = new Store(badDir); st4.Load();
                 check("unrecoverable file sets LoadNote and quarantines", st4.LoadNote != null && Directory.GetFiles(badDir, "data.rc.corrupt-*").Length == 1);
 
-                // sanitization of malformed host fields on load
+                // sanitization of malformed host fields & organization settings round-trip
                 var st5 = new Store(Path.Combine(tmp, "san"));
-                st5.Data.Hosts.Add(new Host { Id = "dup", Name = "", Address = " 10.0.0.2 ", Protocol = "BAD", Port = 99999, Width = 10, Height = 99999 });
+                st5.Data.Hosts.Add(new Host { Id = "dup", Name = "", Address = " 10.0.0.2 ", Protocol = "BAD", Port = 99999, Width = 10, Height = 99999, Pinned = true, Group = " Prod " });
                 st5.Data.Hosts.Add(new Host { Id = "dup", Name = "two", Address = "10.0.0.3", Protocol = "VNC", Port = 0 });
+                st5.Data.Settings.SortBy = "Recent";
+                st5.Data.Settings.ProtocolFilter = "VNC";
+                st5.Data.Settings.CollapsedGroups.Add("Prod");
                 st5.MarkDirty(); st5.Flush();
                 var st5b = new Store(Path.Combine(tmp, "san")); st5b.Load();
-                check("loaded hosts sanitized (ids, ports, protocol, bounds)",
+                check("loaded hosts and organization settings sanitized",
                     st5b.Data.Hosts.Count == 2
                     && st5b.Data.Hosts[0].Id != st5b.Data.Hosts[1].Id
                     && st5b.Data.Hosts[0].Name == "10.0.0.2"
                     && st5b.Data.Hosts[0].Protocol == "RDP"
                     && st5b.Data.Hosts[0].Port == 3389
                     && st5b.Data.Hosts[0].Width == 200 && st5b.Data.Hosts[0].Height == 8192
-                    && st5b.Data.Hosts[1].Port == 5900);
+                    && st5b.Data.Hosts[0].Pinned && st5b.Data.Hosts[0].Group == "Prod"
+                    && st5b.Data.Hosts[1].Port == 5900
+                    && st5b.Data.Settings.SortBy == "Recent"
+                    && st5b.Data.Settings.ProtocolFilter == "VNC"
+                    && st5b.Data.Settings.CollapsedGroups.Contains("Prod"));
             }
             catch (Exception ex) { Console.WriteLine("EXC   " + ex); fail++; }
             finally { try { Directory.Delete(tmp, true); } catch { } }

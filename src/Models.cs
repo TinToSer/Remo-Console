@@ -16,6 +16,7 @@ namespace RemoConsole
         public string Pwd = "";               // DPAPI-protected, base64
         public string Group = "";
         public string Notes = "";
+        public bool Pinned = false;
         public string CardMode = "Default";   // Default | Live | Static
         public long LastConnectedUtc;
 
@@ -74,7 +75,10 @@ namespace RemoConsole
         public string DefaultCardMode = "Static"; // Live | Static
         public int CardWidth = 320;
         public string ViewMode = "Grid";          // Grid | Tabs
-        public string GroupFilter = "";
+        public string GroupFilter = "";           // "" (all) | "__PINNED__" | "__UNGROUPED__" | <group name>
+        public string ProtocolFilter = "";        // "" (all) | "RDP" | "VNC"
+        public string SortBy = "Name";            // Name | Recent | Protocol | Status
+        public List<string> CollapsedGroups = new List<string>();
         public int WinX = -1, WinY = -1, WinW = 1400, WinH = 850;
         public bool Maximized = false;
         public int RetrySeconds = 20;
@@ -86,6 +90,10 @@ namespace RemoConsole
             CardWidth = Math.Max(240, Math.Min(760, CardWidth));
             if (ViewMode != "Grid" && ViewMode != "Tabs") ViewMode = "Grid";
             GroupFilter = GroupFilter ?? "";
+            if (ProtocolFilter != "RDP" && ProtocolFilter != "VNC") ProtocolFilter = "";
+            if (SortBy != "Name" && SortBy != "Recent" && SortBy != "Protocol" && SortBy != "Status") SortBy = "Name";
+            if (CollapsedGroups == null) CollapsedGroups = new List<string>();
+            else CollapsedGroups.RemoveAll(g => g == null);
             if (WinW < 400) WinW = 1400;
             if (WinH < 300) WinH = 850;
             RetrySeconds = Math.Max(5, Math.Min(3600, RetrySeconds));
